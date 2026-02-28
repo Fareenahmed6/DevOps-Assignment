@@ -11,9 +11,12 @@ services:
     environment:
       - FLASK_APP=app.main:app
       - FLASK_ENV=production
-      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@db:5432/devops}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-dummy}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-dummy}
+      - AWS_REGION=${AWS_REGION:-ap-south-1}
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
     depends_on:
-      - db
+      - dynamodb
     networks:
       - app-network
 
@@ -31,21 +34,15 @@ services:
     networks:
       - app-network
 
-  db:
-    image: postgres:15-alpine
-    container_name: postgres
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=devops
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
     networks:
       - app-network
 
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  postgres_data:
